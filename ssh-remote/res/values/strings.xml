@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string
+    name="app_name">SSH Remote</string>
+    
+  <!-- Settings Resources -->
+  <string name="menu_settings_title">Settings</string>
+  <string name="profileCategory">Profile Settings</string>
+  <string name="connectionCategory">Connection Settings</string>
+  <string name="profilePref">Profile</string>
+  <string name="defaultProfile">vlc.properties</string>
+  <string name="selectPrifileTitle">Select Profile</string>
+  <string name="selectPrifileSummary">Profile for SSH remote control</string>
+  <string name="hostNamePref">Host Name</string>
+  <string name="hostNameSummary">Host name or IP address of SSH server</string>
+  <string name="hostNameTitle">Enter Host Name</string>
+  <string name="portPref">Port</string>
+  <string name="portSummary">Port used by secure shell to connect to</string>
+  <string name="portTitle">Enter SSH Port</string>
+  <string name="defaultPort">22</string>
+  <string name="userNamePref">User Name</string>
+  <string name="userNameSummary">User who will produce remote calls</string>
+  <string name="userNameTitle">Enter SSH User</string>
+  <string name="passwordPref">Password</string>
+  <string name="passwordSummary">"SSH user's password"</string>
+  <string name="passwordTitle">Enter Password</string>
+  <string-array name="profileNames">
+    <item>VLC</item>
+    <item>MPlayer</item>
+    <item>Custom</item>
+  </string-array>
+  <string-array name="profiles">
+    <item>vlc.properties</item>
+    <item>mplayer.properties</item>
+    <item></item>
+  </string-array>
+</resources>
