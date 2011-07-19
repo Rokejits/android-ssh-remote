@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+  <PreferenceCategory
+    android:title="@string/profileCategory">
+    <ListPreference
+      android:key="profile_preference"
+      android:title="@string/profilePref"
+      android:entries="@array/profileNames"
+      android:entryValues="@array/profiles"
+      android:dialogTitle="@string/selectPrifileTitle"
+      android:defaultValue="@string/defaultProfile"
+      android:summary="@string/selectPrifileSummary" />
+  </PreferenceCategory>
+  <PreferenceCategory
+    android:title="@string/connectionCategory">
+    <EditTextPreference
+      android:key="host_preference"
+      android:title="@string/hostNamePref"
+      android:dialogTitle="@string/hostNameTitle"
+      android:summary="@string/hostNameSummary"
+      android:positiveButtonText="@android:string/ok"
+      android:negativeButtonText="@android:string/cancel" />
+    <EditTextPreference
+      android:key="port_preference"
+      android:title="@string/portPref"
+      android:dialogTitle="@string/portTitle"
+      android:summary="@string/portSummary"
+      android:defaultValue="@string/defaultPort"
+      android:positiveButtonText="@android:string/ok"
+      android:negativeButtonText="@android:string/cancel" />
+    <EditTextPreference
+      android:key="user_name_preference"
+      android:title="@string/userNamePref"
+      android:dialogTitle="@string/userNameTitle"
+      android:summary="@string/userNameSummary"
+      android:positiveButtonText="@android:string/ok"
+      android:negativeButtonText="@android:string/cancel" />
+    <EditTextPreference
+      android:key="password_preference"
+      android:title="@string/passwordPref"
+      android:dialogTitle="@string/passwordTitle"
+      android:summary="@string/passwordSummary"
+      android:password="true"
+      android:positiveButtonText="@android:string/ok"
+      android:negativeButtonText="@android:string/cancel" />
+  </PreferenceCategory>
+</PreferenceScreen>
