@@ -5,14 +5,13 @@
 
 package com.googlecode.rssh.api;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * @author Anton Novikov
  */
-public class RemoteFile implements Serializable {
-
-  private static final long serialVersionUID = -9076455357965875256L;
+public class RemoteFile implements Parcelable {
 
   private String filePath;
 
@@ -22,6 +21,16 @@ public class RemoteFile implements Serializable {
    * Creates an instance of RemoteFile.
    */
   public RemoteFile() {}
+
+  /**
+   * Creates an instance of RemoteFile.
+   * 
+   * @param parcel
+   */
+  private RemoteFile(Parcel parcel) {
+    this.filePath = parcel.readString();
+    this.isDirectory = parcel.readInt() == 1;
+  }
 
   public String getFilePath() {
     return filePath;
@@ -38,4 +47,28 @@ public class RemoteFile implements Serializable {
   public void setDirectory(boolean isDirectory) {
     this.isDirectory = isDirectory;
   }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(filePath);
+    dest.writeInt(isDirectory ? 1 : 0);
+  }
+
+  public static final Parcelable.Creator<RemoteFile> CREATOR = new Parcelable.Creator<RemoteFile>() {
+
+    @Override
+    public RemoteFile createFromParcel(Parcel source) {
+      return new RemoteFile(source);
+    }
+
+    @Override
+    public RemoteFile[] newArray(int size) {
+      return new RemoteFile[size];
+    }
+  };
 }

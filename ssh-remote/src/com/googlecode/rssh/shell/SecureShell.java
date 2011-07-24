@@ -24,7 +24,6 @@ import android.text.TextUtils;
 import java.io.IOException;
 import java.net.FileNameMap;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,16 +36,9 @@ public class SecureShell {
 
   private SSHClient client;
 
-  private static SecureShell instance;
+  private final RemoteResourceFilter mediaFileFilter = new FileFilter();
 
-  private SecureShell() {}
-
-  public static SecureShell getInstance() {
-    if (instance == null) {
-      instance = new SecureShell();
-    }
-    return instance;
-  }
+  SecureShell() {}
 
   public boolean login(String host, int port, String userName, String password) {
     try {
@@ -72,20 +64,21 @@ public class SecureShell {
     }
   }
 
-  public List<RemoteFile> browseDir(String path) throws IOException {
+  public RemoteFile[] browseDir(RemoteFile dir) throws IOException {
     if (isBadConnection()) {
       throw new ConnectionException("SSH connection is bad. Try to log in again.");
     }
 
     SFTPClient sftp = client.newSFTPClient();
     try {
-      List<RemoteFile> fileList = new ArrayList<RemoteFile>();
-      List<RemoteResourceInfo> files = sftp.ls(path, new FileFilter());
+      List<RemoteResourceInfo> files = sftp.ls(dir.getFilePath(), mediaFileFilter);
+      RemoteFile[] fileList = RemoteFile.CREATOR.newArray(files.size());
+      int index = 0;
       for (RemoteResourceInfo resource : files) {
         RemoteFile file = new RemoteFile();
         file.setDirectory(resource.isDirectory());
         file.setFilePath(resource.getPath());
-        fileList.add(file);
+        fileList[index++] = file;
       }
 
       return fileList;
