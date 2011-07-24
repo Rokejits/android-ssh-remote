@@ -2,7 +2,10 @@
 <resources>
   <string
     name="app_name">SSH Remote</string>
-    
+  
+  <!-- Communication Service Resources -->
+  <string name="connection_not_configured">SSH Connection is not Configured.</string>
+  <string name="connection_parameters_invalid">SSH Connection parameters are invalid.</string>
   <!-- Settings Resources -->
   <string name="menu_settings_title">Settings</string>
   <string name="profileCategory">Profile Settings</string>
