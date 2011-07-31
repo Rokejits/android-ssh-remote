@@ -24,6 +24,9 @@ import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 /**
  * @author Anton Novikov
  */
@@ -132,7 +135,16 @@ public class CommunicationService extends Service {
   }
 
   private void listDir(RemoteFile dir, Messenger replyTo) throws RemoteException {
-
+    try {
+      ArrayList<RemoteFile> content = shell.browseDir(dir);
+      Message reply = Message.obtain(null, COMMAND_LS);
+      Bundle data = new Bundle();
+      data.putParcelableArrayList(OUTPUT_LIST_DIR, content);
+      reply.setData(data);
+      replyTo.send(reply);
+    } catch (IOException e) {
+      LOG.error("Unable to obtain remote dir content.", e);
+    }
   }
 
   private void volumeUp() {

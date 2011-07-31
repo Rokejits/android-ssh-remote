@@ -6,12 +6,9 @@ import com.googlecode.rssh.settings.ConfigActivity;
 import com.googlecode.rssh.shell.CommunicationService;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.view.Menu;
@@ -22,11 +19,9 @@ public class SshRemoteActivity extends Activity {
 
   public static final String ACTION_SSH_REMOTE = "com.googlecode.rssh.actions.SSH_REMOTE";
 
-  private ServiceConnection connection;
+  private CommandServiceConnection connection;
 
   private Messenger responseMessenger;
-
-  private Messenger commandMessenger;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +29,9 @@ public class SshRemoteActivity extends Activity {
     StateHolder stateHolder = (StateHolder) getLastNonConfigurationInstance();
     if (stateHolder == null) {
       responseMessenger = new Messenger(new CommandResponseHandler());
-      connection = new Connection();
+      connection = new CommandServiceConnection();
     } else {
       responseMessenger = stateHolder.responseMessenger;
-      commandMessenger = stateHolder.commandMessenger;
       connection = stateHolder.connection;
     }
 
@@ -48,7 +42,7 @@ public class SshRemoteActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    if (isCommandServiceBound()) {
+    if (connection.isServiceBound()) {
       unbindService(connection);
     }
     super.onDestroy();
@@ -57,7 +51,6 @@ public class SshRemoteActivity extends Activity {
   @Override
   public StateHolder onRetainNonConfigurationInstance() {
     StateHolder stateHolder = new StateHolder();
-    stateHolder.commandMessenger = commandMessenger;
     stateHolder.responseMessenger = responseMessenger;
     stateHolder.connection = connection;
     return stateHolder;
@@ -78,23 +71,6 @@ public class SshRemoteActivity extends Activity {
         return true;
       default:
         return super.onOptionsItemSelected(item);
-    }
-  }
-
-  private boolean isCommandServiceBound() {
-    return commandMessenger != null;
-  }
-
-  private class Connection implements ServiceConnection {
-
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-      commandMessenger = new Messenger(service);
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-      commandMessenger = null;
     }
   }
 
@@ -119,10 +95,8 @@ public class SshRemoteActivity extends Activity {
   }
 
   private static class StateHolder {
-    private ServiceConnection connection;
+    private CommandServiceConnection connection;
 
     private Messenger responseMessenger;
-
-    private Messenger commandMessenger;
   }
 }
