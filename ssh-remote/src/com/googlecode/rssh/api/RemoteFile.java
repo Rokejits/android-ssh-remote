@@ -11,9 +11,11 @@ import android.os.Parcelable;
 /**
  * @author Anton Novikov
  */
-public class RemoteFile implements Parcelable {
+public class RemoteFile implements Parcelable, Comparable<RemoteFile> {
 
   private String filePath;
+
+  private String parentPath;
 
   private boolean isDirectory;
 
@@ -30,6 +32,7 @@ public class RemoteFile implements Parcelable {
   private RemoteFile(Parcel parcel) {
     this.filePath = parcel.readString();
     this.isDirectory = parcel.readInt() == 1;
+    this.parentPath = parcel.readString();
   }
 
   public String getFilePath() {
@@ -48,6 +51,14 @@ public class RemoteFile implements Parcelable {
     this.isDirectory = isDirectory;
   }
 
+  public String getParentPath() {
+    return parentPath;
+  }
+
+  public void setParentPath(String parentPath) {
+    this.parentPath = parentPath;
+  }
+
   @Override
   public int describeContents() {
     return 0;
@@ -57,6 +68,7 @@ public class RemoteFile implements Parcelable {
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(filePath);
     dest.writeInt(isDirectory ? 1 : 0);
+    dest.writeString(parentPath);
   }
 
   public static final Parcelable.Creator<RemoteFile> CREATOR = new Parcelable.Creator<RemoteFile>() {
@@ -71,4 +83,21 @@ public class RemoteFile implements Parcelable {
       return new RemoteFile[size];
     }
   };
+
+  @Override
+  public int compareTo(RemoteFile another) {
+    if (this == another) {
+      return 0;
+    }
+    if (another == null || (isDirectory() && !another.isDirectory())) {
+      // Show directories above files
+      return -1;
+    }
+    if (!isDirectory() && another.isDirectory()) {
+      // Show files below directories
+      return 1;
+    }
+    // Sort the directories alphabetically
+    return getFilePath().compareToIgnoreCase(another.getFilePath());
+  }
 }

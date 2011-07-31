@@ -10,15 +10,19 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Messenger;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Anton Novikov
@@ -28,26 +32,90 @@ public class FileBrowser extends ListActivity {
 
   private static final String HOME_DIR = "~";
 
-  private static final RemoteFile INITIAL_LOCATION;
-
-  static {
-    INITIAL_LOCATION = new RemoteFile();
-    INITIAL_LOCATION.setDirectory(true);
-    INITIAL_LOCATION.setFilePath(HOME_DIR);
-  }
-
   private ArrayAdapter<RemoteFile> adapter;
+
+  private CommandServiceConnection connection;
+
+  private Messenger responseMessenger;
+
+  private RemoteFile currentDir;
+
+  private List<RemoteFile> dirContent;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    RemoteFile[] dirContent = RemoteFile.CREATOR.newArray(0);
+
+    StateHolder holder = (StateHolder) getLastNonConfigurationInstance();
+    if (holder != null) {
+      connection = holder.connection;
+      responseMessenger = holder.responseMessenger;
+      currentDir = holder.currentDir;
+    } else {
+      connection = new CommandServiceConnection();
+      responseMessenger = new Messenger(new CommandResponseHandler());
+      currentDir = new RemoteFile();
+      currentDir.setDirectory(true);
+      currentDir.setFilePath(HOME_DIR);
+    }
+
+    this.dirContent = new ArrayList<RemoteFile>();
     adapter = new FileBrowserAdapter(getApplicationContext(), dirContent);
+    setListAdapter(adapter);
   }
 
-  private RemoteFile[] refreshFileList() {
+  @Override
+  public StateHolder onRetainNonConfigurationInstance() {
+    StateHolder holder = new StateHolder();
+    holder.connection = this.connection;
+    holder.responseMessenger = this.responseMessenger;
+    holder.currentDir = this.currentDir;
+    return holder;
+  }
 
-    return null;
+  @Override
+  protected void onResume() {
+    refreshFileList();
+    super.onResume();
+  }
+
+  @Override
+  public void onBackPressed() {
+    if (currentDir.getParentPath() != null) {
+      RemoteFile parent = new RemoteFile();
+      parent.setDirectory(true);
+      parent.setFilePath(currentDir.getParentPath());
+      currentDir = parent;
+      return;
+    }
+    super.onBackPressed();
+  }
+
+  @Override
+  protected void onDestroy() {
+    setListAdapter(null);
+    super.onDestroy();
+  }
+
+  @Override
+  protected void onListItemClick(ListView l, View v, int position, long id) {
+    RemoteFile file = (RemoteFile) l.getItemAtPosition(position);
+    if (file.isDirectory()) {
+      currentDir = file;
+      refreshFileList();
+    } else {
+      // TODO: implement file picker;
+
+      finish();
+    }
+  }
+
+  private void refreshFileList() {
+    Message command = Message.obtain(null, CommunicationService.COMMAND_LS);
+    Bundle data = new Bundle();
+    data.putParcelable(CommunicationService.INPUT_LIST_DIR, currentDir);
+    command.setData(data);
+    connection.sendCommand(command);
   }
 
   private class CommandResponseHandler extends Handler {
@@ -55,7 +123,13 @@ public class FileBrowser extends ListActivity {
     public void handleMessage(Message msg) {
       switch (msg.what) {
         case CommunicationService.COMMAND_LS:
-
+          Bundle data = msg.getData();
+          ArrayList<RemoteFile> content = data
+              .getParcelableArrayList(CommunicationService.OUTPUT_LIST_DIR);
+          dirContent.clear();
+          dirContent.addAll(content);
+          Collections.sort(dirContent);
+          adapter.notifyDataSetChanged();
           break;
         default:
           super.handleMessage(msg);
@@ -66,7 +140,7 @@ public class FileBrowser extends ListActivity {
 
   private static class FileBrowserAdapter extends ArrayAdapter<RemoteFile> {
 
-    public FileBrowserAdapter(Context context, RemoteFile[] dirContent) {
+    public FileBrowserAdapter(Context context, List<RemoteFile> dirContent) {
       super(context, R.layout.browser_item, dirContent);
     }
 
@@ -102,22 +176,11 @@ public class FileBrowser extends ListActivity {
     private TextView fileName;
   }
 
-  private static class FileComparator implements Comparator<RemoteFile> {
-    @Override
-    public int compare(RemoteFile f1, RemoteFile f2) {
-      if (f1 == f2) {
-        return 0;
-      }
-      if (f1.isDirectory() && !f2.isDirectory()) {
-        // Show directories above files
-        return -1;
-      }
-      if (!f1.isDirectory() && f2.isDirectory()) {
-        // Show files below directories
-        return 1;
-      }
-      // Sort the directories alphabetically
-      return f1.getFilePath().compareToIgnoreCase(f2.getFilePath());
-    }
+  private static class StateHolder {
+    private CommandServiceConnection connection;
+
+    private Messenger responseMessenger;
+
+    private RemoteFile currentDir;
   }
 }
