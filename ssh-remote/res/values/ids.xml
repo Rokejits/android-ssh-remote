@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item type="id" name="ssh_connected_icon"/>
+    <item type="id" name="file_browser_rq_id"/>
 </resources>

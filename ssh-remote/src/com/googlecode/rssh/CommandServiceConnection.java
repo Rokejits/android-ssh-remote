@@ -14,7 +14,7 @@ import android.os.RemoteException;
 /**
  * @author Anton Novikov
  */
-public class CommandServiceConnection implements ServiceConnection {
+class CommandServiceConnection implements ServiceConnection {
   private static final Logger LOG = LoggerFactory.getLogger(CommandServiceConnection.class);
 
   private Messenger commandMessenger;

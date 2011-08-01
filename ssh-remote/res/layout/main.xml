@@ -16,24 +16,34 @@
     android:layout_height="wrap_content"
     android:gravity="center_horizontal">
     <ImageButton
+      android:id="@+id/connect"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:src="@drawable/ic_disconnected" />
+    <ImageButton
       android:id="@+id/rewind"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:src="@android:drawable/ic_media_rew" />
+      android:src="@drawable/ic_media_rew" />
     <ImageButton
       android:id="@+id/pause"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:src="@android:drawable/ic_media_pause"/>
-          <ImageButton
+      android:src="@drawable/ic_media_play" />
+    <ImageButton
       android:id="@+id/stop"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:src="@android:drawable/ic_lock_power_off" />
-          <ImageButton
+      android:src="@drawable/ic_media_stop" />
+    <ImageButton
       android:id="@+id/forward"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:src="@android:drawable/ic_media_ff" />
+      android:src="@drawable/ic_media_ff" />
+    <ImageButton
+      android:id="@+id/open"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:src="@drawable/ic_playlist" />
   </LinearLayout>
 </LinearLayout>

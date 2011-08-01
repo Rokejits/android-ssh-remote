@@ -45,8 +45,8 @@ public class SecureShell {
     try {
       client = new SSHClient(new AndroidConfig());
       client.addHostKeyVerifier(new PromiscuousVerifier());
-      client.authPassword(userName, password);
       client.connect(host, port);
+      client.authPassword(userName, password);
       return true;
     } catch (IOException e) {
       LOG.error("Unable to obtain SSH connection.", e);

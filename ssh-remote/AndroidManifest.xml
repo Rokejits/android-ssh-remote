@@ -5,6 +5,7 @@
   android:versionName="1.0"
   package="com.googlecode.rssh">
   <uses-sdk android:minSdkVersion="10" />
+  <uses-permission android:name="android.permission.INTERNET"></uses-permission>
 
   <application
     android:icon="@drawable/icon"
@@ -18,8 +19,8 @@
         <action android:name="com.googlecode.rssh.actions.SSH_REMOTE"/>
       </intent-filter>
     </activity>
-    <activity android:name=".FileBrowser_"/>
-    <activity android:name=".settings.ConfingActivity"/>
+    <activity android:name=".FileBrowser"/>
+    <activity android:name=".settings.ConfigActivity"/>
     <service
       android:name=".shell.CommunicationService"
       android:process=":ssh_communicator" />
