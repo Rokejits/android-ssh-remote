@@ -24,6 +24,7 @@
     <EditTextPreference
       android:key="port_preference"
       android:title="@string/portPref"
+      android:inputType="number"
       android:dialogTitle="@string/portTitle"
       android:summary="@string/portSummary"
       android:defaultValue="@string/defaultPort"
@@ -41,7 +42,7 @@
       android:title="@string/passwordPref"
       android:dialogTitle="@string/passwordTitle"
       android:summary="@string/passwordSummary"
-      android:password="true"
+      android:inputType="textPassword"
       android:positiveButtonText="@android:string/ok"
       android:negativeButtonText="@android:string/cancel" />
   </PreferenceCategory>

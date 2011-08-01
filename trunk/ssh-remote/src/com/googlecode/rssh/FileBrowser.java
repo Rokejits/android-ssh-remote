@@ -1,7 +1,6 @@
 
 package com.googlecode.rssh;
 
-import com.googlecode.androidannotations.annotations.EActivity;
 import com.googlecode.rssh.api.RemoteFile;
 import com.googlecode.rssh.shell.CommunicationService;
 
@@ -27,8 +26,9 @@ import java.util.List;
 /**
  * @author Anton Novikov
  */
-@EActivity
 public class FileBrowser extends ListActivity {
+
+  public static final String EXTRA_PICK_RESULT = "pick_result";
 
   private static final String HOME_DIR = "~";
 
@@ -124,8 +124,7 @@ public class FileBrowser extends ListActivity {
       switch (msg.what) {
         case CommunicationService.COMMAND_LS:
           Bundle data = msg.getData();
-          ArrayList<RemoteFile> content = data
-              .getParcelableArrayList(CommunicationService.OUTPUT_LIST_DIR);
+          ArrayList<RemoteFile> content = data.getParcelableArrayList(CommunicationService.OUTPUT_LIST_DIR);
           dirContent.clear();
           dirContent.addAll(content);
           Collections.sort(dirContent);
@@ -149,8 +148,7 @@ public class FileBrowser extends ListActivity {
       FileItemHolder holder;
       View row;
       if (convertView == null) {
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(
-            LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         row = inflater.inflate(R.layout.browser_item, parent, false);
         holder = new FileItemHolder();
         row.setTag(holder);
@@ -162,8 +160,7 @@ public class FileBrowser extends ListActivity {
       RemoteFile file = getItem(position);
       String path = file.getFilePath();
       int separatorIndex = path.lastIndexOf(File.separator);
-      String fileName = (separatorIndex < 0) ? path : path.substring(separatorIndex + 1,
-          path.length());
+      String fileName = (separatorIndex < 0) ? path : path.substring(separatorIndex + 1, path.length());
       holder.fileName.setText(fileName);
       holder.icon.setImageResource(file.isDirectory() ? R.drawable.ic_folder : R.drawable.ic_file);
       return row;

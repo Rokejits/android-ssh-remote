@@ -1,23 +1,59 @@
 
 package com.googlecode.rssh;
 
+import com.googlecode.androidannotations.annotations.Click;
 import com.googlecode.androidannotations.annotations.EActivity;
+import com.googlecode.androidannotations.annotations.ViewById;
+import com.googlecode.androidannotations.annotations.res.DrawableRes;
+import com.googlecode.rssh.api.RemoteFile;
 import com.googlecode.rssh.settings.ConfigActivity;
 import com.googlecode.rssh.shell.CommunicationService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
 
 @EActivity(R.layout.main)
 public class SshRemoteActivity extends Activity {
 
   public static final String ACTION_SSH_REMOTE = "com.googlecode.rssh.actions.SSH_REMOTE";
+
+  private static final Logger LOG = LoggerFactory.getLogger(SshRemoteActivity.class);
+
+  @ViewById(R.id.stop)
+  ImageButton stop;
+
+  @ViewById(R.id.pause)
+  ImageButton pause;
+
+  @ViewById(R.id.forward)
+  ImageButton forward;
+
+  @ViewById(R.id.rewind)
+  ImageButton rewind;
+
+  // ImageButton volumeUp;
+  // ImageButton volumeDown;
+
+  @ViewById(R.id.connect)
+  ImageButton connect;
+
+  @DrawableRes(R.drawable.ic_connected)
+  Drawable icConnected;
+
+  @DrawableRes(R.drawable.ic_disconnected)
+  Drawable icDisconnected;
 
   private CommandServiceConnection connection;
 
@@ -36,8 +72,7 @@ public class SshRemoteActivity extends Activity {
     }
 
     // TODO: move to connect command
-    bindService(new Intent(getApplicationContext(), CommunicationService.class), connection,
-        BIND_AUTO_CREATE);
+    bindService(new Intent(getApplicationContext(), CommunicationService.class), connection, BIND_AUTO_CREATE);
   }
 
   @Override
@@ -74,12 +109,42 @@ public class SshRemoteActivity extends Activity {
     }
   }
 
+  @Click(R.id.connect)
+  void onConnectClick(View v) {
+    Message command = Message.obtain(null, CommunicationService.COMMAND_CONNECT);
+    command.replyTo = responseMessenger;
+    connection.sendCommand(command);
+  }
+
+  @Click(R.id.open)
+  void onOpenClick(View v) {
+    startActivityForResult(new Intent(getApplicationContext(), FileBrowser.class), R.id.file_browser_rq_id);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (RESULT_OK != resultCode) {
+      LOG.warn("Requested activity has bad result.");
+      return;
+    }
+
+    switch (requestCode) {
+      case R.id.file_browser_rq_id:
+        RemoteFile file = data.getParcelableExtra(FileBrowser.EXTRA_PICK_RESULT);
+        // TODO: handle play of picked file.
+        break;
+      default:
+        super.onActivityResult(requestCode, resultCode, data);
+        break;
+    }
+  }
+
   private class CommandResponseHandler extends Handler {
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
         case CommunicationService.COMMAND_CONNECT:
-
+          connect.setImageDrawable(icConnected);
           break;
         case CommunicationService.COMMAND_DISCONNECT:
 

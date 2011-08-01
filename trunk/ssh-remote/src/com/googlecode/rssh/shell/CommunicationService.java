@@ -88,19 +88,16 @@ public class CommunicationService extends Service {
   }
 
   private void connect(Messenger replyTo) throws RemoteException {
-    SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(getApplicationContext());
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     String host = prefs.getString(ConfigActivity.HOST_NAME, "");
-    int defPort = Integer.parseInt(getString(R.string.defaultPort));
-    int port = prefs.getInt(ConfigActivity.PORT, defPort);
+    String port = prefs.getString(ConfigActivity.PORT, getString(R.string.defaultPort));
     String username = prefs.getString(ConfigActivity.USER_NAME, "");
     String password = prefs.getString(ConfigActivity.PASSWORD, "");
 
     if (TextUtils.isEmpty(host) || TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
-      Toast.makeText(getApplicationContext(), R.string.connection_not_configured,
-          Toast.LENGTH_SHORT).show();
+      Toast.makeText(getApplicationContext(), R.string.connection_not_configured, Toast.LENGTH_SHORT).show();
     } else {
-      boolean connected = shell.login(host, port, username, password);
+      boolean connected = shell.login(host, Integer.parseInt(port), username, password);
       Message response = Message.obtain(null, COMMAND_CONNECT, connected ? 1 : 0, 0);
       replyTo.send(response);
       if (connected) {
@@ -115,8 +112,7 @@ public class CommunicationService extends Service {
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent,
         PendingIntent.FLAG_UPDATE_CURRENT);
-    notif.setLatestEventInfo(getApplicationContext(), getString(R.string.app_name), "",
-        contentIntent);
+    notif.setLatestEventInfo(getApplicationContext(), getString(R.string.app_name), "", contentIntent);
     notificationManager.notify(R.id.ssh_connected_icon, notif);
   }
 
