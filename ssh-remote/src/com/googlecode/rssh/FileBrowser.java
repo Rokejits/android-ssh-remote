@@ -6,6 +6,7 @@ import com.googlecode.rssh.shell.CommunicationService;
 
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -62,6 +63,9 @@ public class FileBrowser extends ListActivity {
     this.dirContent = new ArrayList<RemoteFile>();
     adapter = new FileBrowserAdapter(getApplicationContext(), dirContent);
     setListAdapter(adapter);
+
+    bindService(new Intent(getApplicationContext(), CommunicationService.class), connection,
+        BIND_AUTO_CREATE);
   }
 
   @Override
@@ -94,6 +98,9 @@ public class FileBrowser extends ListActivity {
   @Override
   protected void onDestroy() {
     setListAdapter(null);
+    if (connection.isServiceBound()) {
+      unbindService(connection);
+    }
     super.onDestroy();
   }
 
@@ -115,6 +122,7 @@ public class FileBrowser extends ListActivity {
     Bundle data = new Bundle();
     data.putParcelable(CommunicationService.INPUT_LIST_DIR, currentDir);
     command.setData(data);
+    command.replyTo = responseMessenger;
     connection.sendCommand(command);
   }
 
@@ -124,7 +132,8 @@ public class FileBrowser extends ListActivity {
       switch (msg.what) {
         case CommunicationService.COMMAND_LS:
           Bundle data = msg.getData();
-          ArrayList<RemoteFile> content = data.getParcelableArrayList(CommunicationService.OUTPUT_LIST_DIR);
+          ArrayList<RemoteFile> content = data
+              .getParcelableArrayList(CommunicationService.OUTPUT_LIST_DIR);
           dirContent.clear();
           dirContent.addAll(content);
           Collections.sort(dirContent);
@@ -148,7 +157,8 @@ public class FileBrowser extends ListActivity {
       FileItemHolder holder;
       View row;
       if (convertView == null) {
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(
+            LAYOUT_INFLATER_SERVICE);
         row = inflater.inflate(R.layout.browser_item, parent, false);
         holder = new FileItemHolder();
         row.setTag(holder);
@@ -160,7 +170,8 @@ public class FileBrowser extends ListActivity {
       RemoteFile file = getItem(position);
       String path = file.getFilePath();
       int separatorIndex = path.lastIndexOf(File.separator);
-      String fileName = (separatorIndex < 0) ? path : path.substring(separatorIndex + 1, path.length());
+      String fileName = (separatorIndex < 0) ? path : path.substring(separatorIndex + 1,
+          path.length());
       holder.fileName.setText(fileName);
       holder.icon.setImageResource(file.isDirectory() ? R.drawable.ic_folder : R.drawable.ic_file);
       return row;
