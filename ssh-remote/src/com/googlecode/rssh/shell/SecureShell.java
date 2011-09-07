@@ -65,14 +65,14 @@ public class SecureShell {
     }
   }
 
-  public ArrayList<RemoteFile> browseDir(RemoteFile dir) throws IOException {
+  public ArrayList<RemoteFile> browseDir(String dir) throws IOException {
     if (isBadConnection()) {
       throw new ConnectionException("SSH connection is bad. Try to log in again.");
     }
 
     SFTPClient sftp = client.newSFTPClient();
     try {
-      List<RemoteResourceInfo> files = sftp.ls(dir.getFilePath(), mediaFileFilter);
+      List<RemoteResourceInfo> files = sftp.ls(dir, mediaFileFilter);
       ArrayList<RemoteFile> fileList = new ArrayList<RemoteFile>(files.size());
       for (RemoteResourceInfo resource : files) {
         RemoteFile file = new RemoteFile();
@@ -130,7 +130,7 @@ public class SecureShell {
         FileNameMap mimeTypeMap = URLConnection.getFileNameMap();
         String mimeType = mimeTypeMap.getContentTypeFor(path);
         accept = !TextUtils.isEmpty(mimeType) && mimeType.startsWith(ACCEPTED_TYPE);
-      } else if (resource.isDirectory()) {
+      } else if (resource.isDirectory() && !resource.getName().startsWith(".")) {
         accept = true;
       }
 

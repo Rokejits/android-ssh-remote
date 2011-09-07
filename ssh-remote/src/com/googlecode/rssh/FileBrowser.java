@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +32,7 @@ public class FileBrowser extends ListActivity {
 
   public static final String EXTRA_PICK_RESULT = "pick_result";
 
-  private static final String HOME_DIR = "~";
+  private static final String HOME_DIR = ".";
 
   private ArrayAdapter<RemoteFile> adapter;
 
@@ -39,14 +40,13 @@ public class FileBrowser extends ListActivity {
 
   private Messenger responseMessenger;
 
-  private RemoteFile currentDir;
+  private String currentDir;
 
   private List<RemoteFile> dirContent;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
     StateHolder holder = (StateHolder) getLastNonConfigurationInstance();
     if (holder != null) {
       connection = holder.connection;
@@ -55,15 +55,18 @@ public class FileBrowser extends ListActivity {
     } else {
       connection = new CommandServiceConnection();
       responseMessenger = new Messenger(new CommandResponseHandler());
-      currentDir = new RemoteFile();
-      currentDir.setDirectory(true);
-      currentDir.setFilePath(HOME_DIR);
+      currentDir = HOME_DIR;
     }
 
     this.dirContent = new ArrayList<RemoteFile>();
     adapter = new FileBrowserAdapter(getApplicationContext(), dirContent);
     setListAdapter(adapter);
 
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
     bindService(new Intent(getApplicationContext(), CommunicationService.class), connection,
         BIND_AUTO_CREATE);
   }
@@ -79,28 +82,31 @@ public class FileBrowser extends ListActivity {
 
   @Override
   protected void onResume() {
-    refreshFileList();
     super.onResume();
+    listDir();
   }
 
   @Override
   public void onBackPressed() {
-    if (currentDir.getParentPath() != null) {
-      RemoteFile parent = new RemoteFile();
-      parent.setDirectory(true);
-      parent.setFilePath(currentDir.getParentPath());
-      currentDir = parent;
-      return;
+    currentDir = new File(currentDir).getParent();
+    if (TextUtils.isEmpty(currentDir)) {
+      super.onBackPressed();
+    } else {
+      listDir();
     }
-    super.onBackPressed();
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    if (connection.isServiceBound()) {
+      unbindService(connection);
+    }
   }
 
   @Override
   protected void onDestroy() {
     setListAdapter(null);
-    if (connection.isServiceBound()) {
-      unbindService(connection);
-    }
     super.onDestroy();
   }
 
@@ -108,8 +114,8 @@ public class FileBrowser extends ListActivity {
   protected void onListItemClick(ListView l, View v, int position, long id) {
     RemoteFile file = (RemoteFile) l.getItemAtPosition(position);
     if (file.isDirectory()) {
-      currentDir = file;
-      refreshFileList();
+      currentDir = file.getFilePath();
+      listDir();
     } else {
       // TODO: implement file picker;
 
@@ -117,10 +123,11 @@ public class FileBrowser extends ListActivity {
     }
   }
 
-  private void refreshFileList() {
+  private void listDir() {
+    setTitle(currentDir);
     Message command = Message.obtain(null, CommunicationService.COMMAND_LS);
     Bundle data = new Bundle();
-    data.putParcelable(CommunicationService.INPUT_LIST_DIR, currentDir);
+    data.putString(CommunicationService.INPUT_LIST_DIR, currentDir);
     command.setData(data);
     command.replyTo = responseMessenger;
     connection.sendCommand(command);
@@ -161,6 +168,8 @@ public class FileBrowser extends ListActivity {
             LAYOUT_INFLATER_SERVICE);
         row = inflater.inflate(R.layout.browser_item, parent, false);
         holder = new FileItemHolder();
+        holder.fileName = (TextView) row.findViewById(R.id.file_name);
+        holder.icon = (ImageView) row.findViewById(R.id.file_icon);
         row.setTag(holder);
       } else {
         row = convertView;
@@ -189,6 +198,6 @@ public class FileBrowser extends ListActivity {
 
     private Messenger responseMessenger;
 
-    private RemoteFile currentDir;
+    private String currentDir;
   }
 }
