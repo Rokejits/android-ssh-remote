@@ -20,7 +20,8 @@
       android:dialogTitle="@string/hostNameTitle"
       android:summary="@string/hostNameSummary"
       android:positiveButtonText="@android:string/ok"
-      android:negativeButtonText="@android:string/cancel" />
+      android:negativeButtonText="@android:string/cancel" 
+      android:defaultValue="192.168.1.102"/>
     <EditTextPreference
       android:key="port_preference"
       android:title="@string/portPref"
@@ -36,7 +37,8 @@
       android:dialogTitle="@string/userNameTitle"
       android:summary="@string/userNameSummary"
       android:positiveButtonText="@android:string/ok"
-      android:negativeButtonText="@android:string/cancel" />
+      android:negativeButtonText="@android:string/cancel"
+      android:defaultValue="anton" />
     <EditTextPreference
       android:key="password_preference"
       android:title="@string/passwordPref"
@@ -44,6 +46,7 @@
       android:summary="@string/passwordSummary"
       android:inputType="textPassword"
       android:positiveButtonText="@android:string/ok"
-      android:negativeButtonText="@android:string/cancel" />
+      android:negativeButtonText="@android:string/cancel" 
+      android:defaultValue="abc123"/>
   </PreferenceCategory>
 </PreferenceScreen>

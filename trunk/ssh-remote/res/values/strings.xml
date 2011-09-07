@@ -27,6 +27,9 @@
   <string name="passwordPref">Password</string>
   <string name="passwordSummary">"SSH user's password"</string>
   <string name="passwordTitle">Enter Password</string>
+  <string name="connectinsMsg">Connecting...</string>
+  <string name="waitMsg">Wait Please...</string>
+  <string name="loadingMsg">Loading...</string>
   <string-array name="profileNames">
     <item>VLC</item>
     <item>MPlayer</item>

@@ -6,6 +6,7 @@ import com.googlecode.androidannotations.annotations.EActivity;
 import com.googlecode.androidannotations.annotations.ViewById;
 import com.googlecode.androidannotations.annotations.res.DrawableRes;
 import com.googlecode.rssh.api.RemoteFile;
+import com.googlecode.rssh.core.SshRemoteApp;
 import com.googlecode.rssh.settings.ConfigActivity;
 import com.googlecode.rssh.shell.CommunicationService;
 
@@ -71,8 +72,10 @@ public class SshRemoteActivity extends Activity {
       connection = stateHolder.connection;
     }
 
-    // TODO: move to connect command
-    bindService(new Intent(getApplicationContext(), CommunicationService.class), connection, BIND_AUTO_CREATE);
+    bindService(new Intent(getApplicationContext(), CommunicationService.class), connection,
+        BIND_AUTO_CREATE);
+    boolean isSshConnected = ((SshRemoteApp) getApplication()).isSshConnected();
+    connect.setImageDrawable(isSshConnected ? icConnected : icDisconnected);
   }
 
   @Override
@@ -80,6 +83,7 @@ public class SshRemoteActivity extends Activity {
     if (connection.isServiceBound()) {
       unbindService(connection);
     }
+
     super.onDestroy();
   }
 
@@ -111,14 +115,15 @@ public class SshRemoteActivity extends Activity {
 
   @Click(R.id.connect)
   void onConnectClick(View v) {
-    Message command = Message.obtain(null, CommunicationService.COMMAND_CONNECT);
+    Message command = Message.obtain(null, CommunicationService.COMMAND_CON_DISC);
     command.replyTo = responseMessenger;
     connection.sendCommand(command);
   }
 
   @Click(R.id.open)
   void onOpenClick(View v) {
-    startActivityForResult(new Intent(getApplicationContext(), FileBrowser.class), R.id.file_browser_rq_id);
+    startActivityForResult(new Intent(getApplicationContext(), FileBrowser.class),
+        R.id.file_browser_rq_id);
   }
 
   @Override
@@ -143,11 +148,10 @@ public class SshRemoteActivity extends Activity {
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
-        case CommunicationService.COMMAND_CONNECT:
-          connect.setImageDrawable(icConnected);
-          break;
-        case CommunicationService.COMMAND_DISCONNECT:
-
+        case CommunicationService.COMMAND_CON_DISC:
+          if (msg.arg1 == 1) {
+            connect.setImageDrawable(msg.arg2 == 1 ? icConnected : icDisconnected);
+          }
           break;
         case CommunicationService.COMMAND_PAUSE:
 

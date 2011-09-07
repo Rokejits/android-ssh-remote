@@ -2,14 +2,15 @@
 package com.googlecode.rssh.shell;
 
 import com.googlecode.rssh.R;
+import com.googlecode.rssh.SshRemoteActivity_;
 import com.googlecode.rssh.api.RemoteFile;
+import com.googlecode.rssh.core.SshRemoteApp;
 import com.googlecode.rssh.settings.ConfigActivity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -48,43 +49,41 @@ public class CommunicationService extends Service {
 
   public static final int COMMAND_VOLUME_DOWN = 6;
 
-  public static final int COMMAND_CONNECT = 7;
+  public static final int COMMAND_CON_DISC = 7;
 
-  public static final int COMMAND_DISCONNECT = 8;
-
-  public static final int COMMAND_LS = 9;
+  public static final int COMMAND_LS = 8;
 
   public static final String INPUT_LIST_DIR = "in_list_dir";
 
   public static final String OUTPUT_LIST_DIR = "out_list_dir";
 
-  public static final String EXTRA_STARTER_ACTION = "starter_action";
-
   private final Messenger messenger = new Messenger(new CommandHandler());
-
-  private NotificationManager notificationManager;
 
   private SecureShell shell;
 
-  private String starterAction;
+  private SshRemoteApp application;
 
   @Override
   public IBinder onBind(Intent intent) {
-    starterAction = intent.getStringExtra(EXTRA_STARTER_ACTION);
     return messenger.getBinder();
   }
 
   @Override
   public void onCreate() {
     super.onCreate();
-    notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-    shell = new SecureShell();
+    LOG.debug("Service is Created");
+    application = (SshRemoteApp) getApplication();
+  }
+
+  @Override
+  public int onStartCommand(Intent intent, int flags, int startId) {
+    return START_STICKY;
   }
 
   @Override
   public void onDestroy() {
-    shell = null;
     super.onDestroy();
+    LOG.debug("Service is destroyed");
   }
 
   private void connect(Messenger replyTo) throws RemoteException {
@@ -99,33 +98,38 @@ public class CommunicationService extends Service {
       Toast.makeText(getApplicationContext(), R.string.connection_not_configured,
           Toast.LENGTH_SHORT).show();
     } else {
+      shell = new SecureShell();
       boolean connected = shell.login(host, Integer.parseInt(port), username, password);
-      Message response = Message.obtain(null, COMMAND_CONNECT, connected ? 1 : 0, 0);
+      // first arg is command status, second means that connect command
+      // performed.
+      Message response = Message.obtain(null, COMMAND_CON_DISC, connected ? 1 : 0, 1);
       replyTo.send(response);
+      application.setSshConnected(connected);
       if (connected) {
-        showIcon();
+        // start service as foreground and show service icon
+        Notification notif = new Notification(R.drawable.stat_app_icon, "",
+            System.currentTimeMillis());
+        Intent intent = new Intent(getApplicationContext(), SshRemoteActivity_.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT);
+        notif.flags |= Notification.FLAG_ONGOING_EVENT;
+        notif.setLatestEventInfo(getApplicationContext(), getString(R.string.app_name), "",
+            contentIntent);
+        startForeground(R.id.ssh_connected_icon, notif);
       }
     }
   }
 
-  private void showIcon() {
-    Notification notif = new Notification(R.drawable.stat_app_icon, "", System.currentTimeMillis());
-    Intent intent = new Intent(starterAction);
-    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-    PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent,
-        PendingIntent.FLAG_UPDATE_CURRENT);
-    notif.flags |= Notification.FLAG_ONGOING_EVENT;
-    notif.setLatestEventInfo(getApplicationContext(), getString(R.string.app_name), "",
-        contentIntent);
-    notificationManager.notify(R.id.ssh_connected_icon, notif);
-  }
-
   private void disconnect(Messenger replyTo) throws RemoteException {
     boolean disconnected = shell.logout();
-    Message response = Message.obtain(null, COMMAND_DISCONNECT, disconnected ? 1 : 0, 0);
+    // first arg is command status, second means that disconnection performed.
+    Message response = Message.obtain(null, COMMAND_CON_DISC, disconnected ? 1 : 0, 0);
     replyTo.send(response);
     if (disconnected) {
-      notificationManager.cancel(R.id.ssh_connected_icon);
+      shell = null;
+      application.setSshConnected(false);
+      stopForeground(true);
       stopSelf();
     }
   }
@@ -134,7 +138,7 @@ public class CommunicationService extends Service {
 
   }
 
-  private void listDir(RemoteFile dir, Messenger replyTo) throws RemoteException {
+  private void listDir(String dir, Messenger replyTo) throws RemoteException {
     try {
       ArrayList<RemoteFile> content = shell.browseDir(dir);
       Message reply = Message.obtain(null, COMMAND_LS);
@@ -173,15 +177,16 @@ public class CommunicationService extends Service {
     public void handleMessage(Message msg) {
       try {
         switch (msg.what) {
-          case COMMAND_CONNECT:
-            connect(msg.replyTo);
-            break;
-          case COMMAND_DISCONNECT:
-            disconnect(msg.replyTo);
+          case COMMAND_CON_DISC:
+            if (application.isSshConnected()) {
+              disconnect(msg.replyTo);
+            } else {
+              connect(msg.replyTo);
+            }
             break;
           case COMMAND_LS:
             Bundle msgData = msg.getData();
-            RemoteFile dir = msgData.getParcelable(INPUT_LIST_DIR);
+            String dir = msgData.getString(INPUT_LIST_DIR);
             listDir(dir, msg.replyTo);
             break;
           case COMMAND_START:
